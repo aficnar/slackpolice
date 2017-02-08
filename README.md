@@ -1,2 +1,1 @@
-# slack_police
-# It's great!
+This is going to be a blog about my Insight project called Slack police.
