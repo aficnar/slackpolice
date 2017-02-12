@@ -1,5 +1,6 @@
 # Slack Police: You have the right to stay on topic
-<img align="right" width = 150 src="slack_police_logo.png"/>
+<img src="slack_police_logo.png">
+
 ![Image of Yaktocat](slack_police_logo.png)
 This is a project I did as a Data Science Fellow at [Insight Data Science](http://insightdatascience.com/) in the January 2017 session, in consultation with [Fast Forward Labs](http://www.fastforwardlabs.com/). 
 
