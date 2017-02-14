@@ -1,4 +1,4 @@
-# Slack Police: You have the right to stay on topic
+# You have the right to stay on topic
 <img align="right" width="150px" src="slack_police_logo.png">
 This is a project I did as a Data Science Fellow at [Insight Data Science](http://insightdatascience.com/) in the January 2017 session, in consultation with [Fast Forward Labs](http://www.fastforwardlabs.com/). 
 
@@ -8,8 +8,8 @@ And so I built a user-friendly and reasonably smart bot for Slack that helps use
 
 [Here](https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000) is the presentation that closely follows this blog.
 
-<a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn">Presentation</a>
-<a href="https://github.com/aficnar/slackpolice" class="btn">Code on Github</a>
+<a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn2">Presentation</a>
+<a href="https://github.com/aficnar/slackpolice" class="btn2">Code on Github</a>
 
 ---
 
