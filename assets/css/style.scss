@@ -17,13 +17,13 @@
   border-style: solid; 
   border-width: 2px; 
   border-radius: 0.3rem;
-  padding: 1rem 1rem;
+  padding: 0.5rem 1rem;
   transition: color 0.2s, background-color 0.2s, border-color 0.2s; }
 
 .btn2:hover { 
   color: #159957; 
   text-decoration: none; 
-  background-color: rgba(255, 255, 255, 0.2); 
+  background-color: #155799; 
   border-color: #159957; }
 
 .btn2 + .btn2 { margin-left: 1rem; }
