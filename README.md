@@ -5,10 +5,13 @@ Fast Forward Labs is in business of building prototypes by taking cutting edge m
 
 And so I built a user-friendly and reasonably **smart bot for Slack that helps users stay on topic**. 
 
-Below you can find the links to a presentation that closely follows this blog and the bot code on Github.
+Below you can find the links to the demo Slack Team where you can play with the bot (see Section 3 for details), a presentation that closely follows this blog, and the bot code on Github.
 
-<div align="right"><a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn2">Presentation</a>
-<a href="https://github.com/aficnar/slackpolice" class="btn2">Code on Github</a></div>
+<div align="right">
+<a href="https://slack-police.slack.com" class="btn2">Demo Slack Team</a>
+<a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn2">Presentation</a>
+<a href="https://github.com/aficnar/slackpolice" class="btn2">Code on Github</a>
+</div>
 
 ---
 
