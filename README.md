@@ -60,8 +60,7 @@ In the demo Slack team I created 5 channels, corresponding to the 5 subreddits a
 To upload the Reddit data to my Slack team, I first registered 4 [bot users](https://api.slack.com/bot-users) on Slack (posing as famous characters on Seinfeld!), and used the excellent package [`slackclient`](https://github.com/slackapi/python-slackclient) that allows one to communicate with Slack's API from Python. For more details on how to build simple bots in Python, check out my code here on Github and / or have a look at a great tutorial from the [Full Stack Python](https://www.fullstackpython.com/blog/build-first-slack-bot-python.html) blog. The bot itself is hosted on [AWS](https://aws.amazon.com/), constantly monitoring the discussions in the demo Slack team.
 
 Below is a little illustration of bot's basic functionality, showing me entering a couple of messages in the *Data Science* channel. As you can see, as long as the messages are vaguely related to data science, or are of generic content that could belong to any of the channels (e.g. 'thank you', etc.), the bot doesn't bother me. But if I mention something more closely related to one of the other existing channels, the bot will let me know where those messages might be more appropriate. 
-
-<img src="usage_animation.gif" width="700px" hspace="20" vspace="20" align="center">
+<p><img src="usage_animation.gif" width="700px" hspace="20" vspace="20" align="center"></p>
 
 ---
 
@@ -93,12 +92,12 @@ WMD is the application of the EMD problem to the context of word embeddings, whe
 
 ## 4.2 Modifying WMD
 
-A practical obstacle in applying this method to our case is the fact that the EMD algorithm has horrible time complexity: $O(p^3 \log(p))$, where $p$ is the number of unique words in the two documents. We would need to compare the user's input to all of the previous messages in all the channels, calculate the average distance for each of the channels, and the one with the smallest average distance would be our prediction for the channel to which the user's message should go. If the user posted the message in the channel we predicted, the bot doesn't do anything, otherwise the bot will advise the user to consider posting it to the predicted channel. For Slack teams that contain a lot of messages spread out over a lot of channels, this will not be a feasible approach for a real time response of the bot. 
+A practical obstacle in applying this method to our case is the fact that the EMD algorithm has horrible time complexity: <i>O(p^3 log(p))</i>, where <i>p</i> is the number of unique words in the two documents. We would need to compare the user's input to all of the previous messages in all the channels, calculate the average distance for each of the channels, and the one with the smallest average distance would be our prediction for the channel to which the user's message should go. If the user posted the message in the channel we predicted, the bot doesn't do anything, otherwise the bot will advise the user to consider posting it to the predicted channel. For Slack teams that contain a lot of messages spread out over a lot of channels, this will not be a feasible approach for a real time response of the bot. 
 
 <img align="right" width="300px" src="frequencies.png" hspace="20" vspace="20">
 So I needed to modify the WMD method somewhat. Comparing the input message to *all* the messages in a given channel seems excessive: surely there are messages that are more "representative" of the channel content than the others, and it's likely enough to compare the user input to those messages only. However, this would require expensive preprocessing, in which we essentially have to sort the channel messages using WMD as a key. But can we somehow *construct* a single message representative of an entire channel? 
 
-Intuitively, this could be achieved by looking at word distributions in a given channel, as shown on the right. Obviously, to a person, looking at the first, say, 10 or so words that occur most often in a channel would give a pretty good idea of what that channel is about. A single message representative of that channel should therefore contain only those 10 words. To use this message in EMD / WMD, we need to choose the signatures of the vectors representing the words in it. Since signatures in a standard WMD are directly proportional to how many times a given word appears in a message, we can make the signatures in our representative message proportional to the number of times a given word appears in the entire channel (and then normalize it). 
+Intuitively, this could be achieved by looking at word distributions in a given channel, as shown on the right. Obviously, to a person, looking at the first, say, 10 or so words that occur most often in a channel would give a pretty good idea of what that channel is about. A single message representative of that channel should therefore contain only those 10 words. To use this message in EMD / WMD, we need to choose the signatures of the vectors representing the words in it. Since signatures in a standard WMD are directly proportional to how many times a given word appears in a message, we can make the signatures (see previous subsection) in our representative message proportional to the number of times a given word appears in the entire channel (and then normalize it). 
 
 In this way we've constructed a single representative message for each channel, and we only need to calculate the WMD distances between the input message to each of the representative messages, find the smallest one, and predict the corresponding channel as the one the input message is supposed to go to.
 
@@ -106,11 +105,11 @@ In this way we've constructed a single representative message for each channel, 
 
 # <a name="bot_smart">5. How smart is the bot?</a>
 
-But is 10 words enough to form a representative message? Is it 30? A 100? We can find the optimal number of words,  $n_{words}$, by treating it as a hyperparameter and tuning it on a validation set. Our entire corpus will consist of about 5000 comments of varying length from each of the 5 channels, which will be split into a training (70%), validation (20%) and test (10%) set. 
+But is 10 words enough to form a representative message? Is it 30? A 100? We can find the optimal number of words,  <i>n_words</i>, by treating it as a hyperparameter and tuning it on a validation set. Our entire corpus will consist of about 5000 comments of varying length from each of the 5 channels, which will be split into a training (70%), validation (20%) and test (10%) set. 
 
 The training set will be used to infer the word distributions for each of the channels. The text will be pre-processed in a standard way (by removing punctuation, stop words, etc.), and in addition to that we'll also use `Spacy`'s parts-of-sentence tagging to only leave the nouns, verbs and adjectives, as they are the ones carrying most of the meaning. We will also remove all the words that are not in `Spacy`'s pre-trained vocabulary, since we won't have a vector representation for those (luckily, only about 2.5% of the words are not in the vocabulary).
 
-The validation set will be used to determine the best value for $n_{words}$, which turned out to be 180.
+The validation set will be used to determine the best value for <i>n_words</i>, which turned out to be 180.
 
 <img align="right" width="300px" src="confusion_matrix.png" hspace="20" vspace="20">
 Finally, the test set will be used to compute the final accuracy of our model. Below we see the confusion matrix for the test set, showing the true categories vs. the predicted ones. The accuracy of this model is about 74%, which is pretty good, and a noticeable improvement from the 68% that one gets using tf-idf approach and cosine similarity as the metric. 
@@ -206,11 +205,9 @@ This is a project I built in three weeks at Insight. That's not a lot of time, b
 ---
 
 ## <a name="about_me">7. About me</a>
-I'm a theoretical physicist and an aspiring data scientist. I got my PhD from Columbia University in 2014, where I studied applications of string theory to real-world physical systems in order to better understand their properties. After that, I moved to the University of Oxford for a postdoc, where I got more and more interested in applying my coding and analytical skills to data-rich environments. This eventually led me back to New York in 2016, and then into Insight. 
+My name is Andrej Ficnar, I'm a theoretical physicist and an aspiring data scientist. I got my PhD from Columbia University in 2014, where I studied applications of string theory to real-world physical systems in order to better understand their properties. After that, I moved to the University of Oxford for a postdoc, where I got more and more interested in applying my coding and analytical skills to data-rich environments. This eventually led me back to New York in 2016, and then into Insight. 
 
 Check out my profile on [Linkedin](https://www.linkedin.com/in/aficnar) and my codes on [Github](https://github.com/aficnar/) for more info about me.
-
----
 
 <script>
 function showhide(elem) {
