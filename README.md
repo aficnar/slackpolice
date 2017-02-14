@@ -8,6 +8,9 @@ And so I built a user-friendly and reasonably smart bot for Slack that helps use
 
 [Here](https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000) is the presentation that closely follows this blog.
 
+<a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn">Presentation</a>
+<a href="https://github.com/aficnar/slackpolice" class="btn">Code on Github</a>
+
 ---
 
 # Contents
