@@ -1,15 +1,14 @@
-# You have the right to stay on topic
-<img align="right" width="150px" src="slack_police_logo.png">
+<img align="right" width="200px" src="slack_police_logo.png">
 This is a project I did as a Data Science Fellow at [Insight Data Science](http://insightdatascience.com/) in the January 2017 session, in consultation with [Fast Forward Labs](http://www.fastforwardlabs.com/). 
 
 Fast Forward Labs is in business of building prototypes by taking cutting edge machine learning and AI research and evaluating its feasibility in the real world. They were interested in building a chat bot that incorporates some pretty cool recent methods for natural language processing.
 
-And so I built a user-friendly and reasonably smart bot for Slack that helps users stay on topic. 
+And so I built a user-friendly and reasonably smart **bot for Slack that helps users stay on topic**. 
 
-[Here](https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000) is the presentation that closely follows this blog.
+Below you can find the links to a presentation that closely follows this blog and the bot code on Github.
 
-<a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn2">Presentation</a>
-<a href="https://github.com/aficnar/slackpolice" class="btn2">Code on Github</a>
+<div align="right"><a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn2">Presentation</a>
+<a href="https://github.com/aficnar/slackpolice" class="btn2">Code on Github</a></div>
 
 ---
 
@@ -19,7 +18,7 @@ And so I built a user-friendly and reasonably smart bot for Slack that helps use
 
 [**2. Getting the data**](#get_data)
 
-[**3. Demo: Officer Slack in action**](#demo)
+[**3. Demo: Officer Slackbot in action**](#demo)
 
 [**4. Bot brains**](#bot_brains)
 
@@ -35,7 +34,7 @@ And so I built a user-friendly and reasonably smart bot for Slack that helps use
 
 [Slack](https://slack.com/) is a popular messaging app for teams that allows team members to discuss different topics, organized in channels. Now, when a new member joins a Slack team that's been around for some time, they sometimes tend to post messages in wrong channels. Nobody wants to be that nagging senior team member trying to direct this rookie to a more appropriate place. 
 
-Wouldn't it be nice to have a smart bot that can learn topics of different channels, monitor the discussions and then warn the users when they go off topic? Building such a bot is the aim of this project.
+Wouldn't it be nice to have a smart bot that can learn topics of different channels, monitor the discussions and then warn users if they go off topic? Building such a bot is the aim of this project.
 
 ---
 
@@ -49,7 +48,7 @@ The relevant data (submissions and comments) can then be downloaded using Reddit
 
 ---
 
-# <a name="demo">3. Demo: Officer Slack in action</a>
+# <a name="demo">3. Demo: Officer Slackbot in action</a>
 
 To showcase my bot's might, I made a [demo Slack team](https://slack-police.slack.com) -- go ahead and try it out! I created a generic user with a username `demo_user` and the password I have either shared with you when I presented the project or you can [email me](mailto:aficnar@gmail.com) to ask for it.
 
