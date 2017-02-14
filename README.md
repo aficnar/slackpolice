@@ -61,7 +61,7 @@ To upload the Reddit data to my Slack team, I first registered 4 [bot users](htt
 
 Below is a little illustration of bot's basic functionality, showing me entering a couple of messages in the *Data Science* channel. As you can see, as long as the messages are vaguely related to data science, or are of generic content that could belong to any of the channels (e.g. 'thank you', etc.), the bot doesn't bother me. But if I mention something more closely related to one of the other existing channels, the bot will let me know where those messages might be more appropriate. 
 
-<img src="usage_animation.gif" width="700px" hspace="20" vspace="20">
+<img src="usage_animation.gif" width="700px" hspace="20" vspace="20" align="center">
 
 ---
 
@@ -83,10 +83,12 @@ A way to fix this was proposed recently on the International Conference on Machi
 <img align="right" width="300px" src="w2v_space.png" hspace="20" vspace="20">
 Then, a natural way to estimate how dissimilar, or distant, the two documents are is to look at the distance between the corresponding word vectors and, roughly speaking, add those distances up. This metric is called the Word Mover's Distance, because it is an instance of the well-known [Earth Mover's Distance](https://en.wikipedia.org/wiki/Earth_mover's_distance) (EMD) optimization problem, only formulated in the word embedding space. 
 
-What follows is an intuitive, but somewhat technical explanation of the EMD problem, important for understanding the modification of the WMD that I'll have to do. The EMD assumes that one has two collections of vectors, let's call them the *senders* and the *receivers*, and a matrix of their pair-wise distances. In addition to this, each of the vectors has a signature, which is a real number smaller than 1, indicating how much "stuff" each of the sender vectors has to send and how much of the stuff each of the receiver vectors needs to receive. The sum of all the signatures for the receiver vectors is normalized to 1, as it is for the sender vectors. The problem now is, given the distances (costs) between the sender-receiver pairs, to determine the most efficient way to *move* the stuff from the senders to the receivers, allowing for partial sending and receiving, i.e. so that a sender can send a portion of its stuff to one receiver and another portion to another receiver. This is obviously a non-trivial constrained optimization problem, and it has a known solution, which can be easily implemented in Python with the [`pyemd`](https://pypi.python.org/pypi/pyemd) package. 
+What follows is an intuitive, but somewhat technical explanation of the EMD problem, important for understanding the modification of the WMD that I'll have to do. <a onclick="showhide('expl1')"><font size="2">[show / hide]</font></a>
+<div style="display:none" id="expl1">
+The EMD assumes that one has two collections of vectors, let's call them the *senders* and the *receivers*, and a matrix of their pair-wise distances. In addition to this, each of the vectors has a signature, which is a real number smaller than 1, indicating how much "stuff" each of the sender vectors has to send and how much of the stuff each of the receiver vectors needs to receive. The sum of all the signatures for the receiver vectors is normalized to 1, as it is for the sender vectors. The problem now is, given the distances (costs) between the sender-receiver pairs, to determine the most efficient way to *move* the stuff from the senders to the receivers, allowing for partial sending and receiving, i.e. so that a sender can send a portion of its stuff to one receiver and another portion to another receiver. This is obviously a non-trivial constrained optimization problem, and it has a known solution, which can be easily implemented in Python with the [`pyemd`](https://pypi.python.org/pypi/pyemd) package. 
 
 WMD is the application of the EMD problem to the context of word embeddings, where the senders and receivers are w2v vectors of words from the first and second document we're comparing, respectively. The signatures of the vectors are chosen to be proportional to the number of times the corresponding word appears in the document. The distances between the vectors are then calculated using standard Euclidean distances in the word embedding space. In this way we can easily calculate the WMD distance between two documents using the `pyemd` package.
-
+</div>
 
 
 ## 4.2 Modifying WMD
