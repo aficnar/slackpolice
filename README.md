@@ -53,7 +53,7 @@ The relevant data (submissions and comments) can then be downloaded using Reddit
 
 # <a name="demo">3. Demo: Officer Slackbot in action</a>
 
-To showcase my bot's might, I made a [demo Slack team](https://slack-police.slack.com) -- go ahead and try it out! I created a generic user with a username `demo_user` and the password I have either shared with you when I presented the project or you can [email me](mailto:aficnar@gmail.com) to ask for it.
+To showcase my bot's might, I made a [demo Slack team](https://slack-police.slack.com) -- go ahead and try it out! I created a generic user with a **username `slack.police.demo@gmail.com`** and the password I have either shared with you when I presented the project or you can [email me](mailto:aficnar@gmail.com) to ask for it.
 
 In the demo Slack team I created 5 channels, corresponding to the 5 subreddits above, and populated those channels with the comments obtained from the corresponding subreddits. For simplicity, I focused only on comments, rather than the submissions, since they tend to be shorter, perhaps more faithfully mimicking the form of Slack messages. 
 
