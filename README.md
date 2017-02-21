@@ -68,9 +68,9 @@ Below is a little illustration of bot's basic functionality, showing me entering
 
 Now that we've seen the bot in action, let's see how does it do all this. 
 
-<img align="right" width="200px" src="two_documents.png" hspace="20" vspace="20">
-The bot obviously needs to be able to compare two messages (more generally, documents): the user's input and one of the messages already present in a channel. A standard way to compare two documents is to use a [bag-of-words](https://en.wikipedia.org/wiki/Bag-of-words_model) (BoW) approach, which assigns a sparse vector to each document, with elements related to the number of times a given word appears in the document (this includes approaches such as [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) as well). Once such document vectors are generated, the similarity of the two documents is measured by calculating the cosine between the corresponding vectors: higher cosine similarity indicates more similar documents. 
+The bot obviously needs to be able to compare two messages (more generally, documents): the user's input and one of the messages already present in a channel. A standard way to compare two documents is to use the [bag-of-words](https://en.wikipedia.org/wiki/Bag-of-words_model) (BoW) approach, which assigns a sparse vector to each document, with elements related to the number of times a given word appears in the document (this includes approaches such as [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) as well). Once such document vectors are generated, the similarity of the two documents is measured by calculating the cosine between the corresponding vectors: higher cosine similarity indicates more similar documents. 
 
+<img align="right" width="200px" src="two_documents.png" hspace="20" vspace="20">
 However, problems arise when two documents share no common words, but convey similar meaning, such as in the example on the right. The BoW / tf-idf vectors of these two documents are perpendicular, yielding zero cosine similarity. 
 
 
