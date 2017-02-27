@@ -55,7 +55,7 @@ lengths = [len(datum) for datum in data]
 # Preprocess the text
 # ------------------------------------------------------------------------------
 
-# Get rid of the Emojis
+# Get rid of the Emojis:
 emoji_pattern = re.compile(
     u"(\ud83d[\ude00-\ude4f])|"  # emoticons
     u"(\ud83c[\udf00-\uffff])|"  # symbols & pictographs (1 of 2)
@@ -68,8 +68,10 @@ emoji_pattern = re.compile(
 stopset = set(stopwords.words('english'))
 my_stopset = set(['would', 'http', 'also', 'com', 'https']).union(stopset)
 
-# Function that takes a post, cleans it and returns list of tokens:
 def clean_post(post):
+    """
+    Takes a post, cleans it and returns list of tokens.
+    """
     if type(post) == str: conv_post = unicode(post, "utf-8")
     else: conv_post = post
     u_post = emoji_pattern.sub('', conv_post)
@@ -86,10 +88,12 @@ data_tokenized = [[clean_post(comment) for comment in datum] for datum in data]
 vectorizer = CountVectorizer(stop_words = None)
 nlp = spacy.load('en')
 
-# Function to check if a word is in vocabulary AND is either a noun, 
-# a verb or an adjective:
 pos_set = set([u'NOUN', u'ADJ', u'VERB'])
 def oov_checker_plus(s):
+    """
+    Check if a word is in Spacy's vocabulary AND is either a noun, a verb 
+    or an adjective 
+    """
     if type(s) == str: s = unicode(s, "utf-8")
     is_oov = nlp(s)[0].is_oov
     is_info_word = nlp(s)[0].pos_ in pos_set
@@ -146,15 +150,21 @@ rel_freq_list = [f / f.sum() for f in freqs_list]
 # Modified Word Mover's Distance
 # ------------------------------------------------------------------------------
 
-# The function that gives the modified WMD distance between the input and a 
-# channel's representative message (see my blog for more info):
 def wmd_mod(s1, i_cat, no_top):
+    """
+    Gives the modified WMD distance (see my blog for more info) between the 
+    input string s1 and a representative message of no_top words of channel 
+    with index i_cat
+    """
+    # Representative message made up of no_top top words:
     s2 = " ".join(rel_freq_list[i_cat].index.tolist()[:no_top])
     vect_fit = vectorizer.fit([s1, s2])
-    spacy_words = nlp(" ".join(vect_fit.get_feature_names()))  
+    spacy_words = nlp(" ".join(vect_fit.get_feature_names())) 
+    # Make bag-of-words vectors 
     v_1, v_2 = vect_fit.transform([s1, s2])
     v_1 = v_1.toarray().ravel().astype(np.double)
     v_2 = v_2.toarray().ravel().astype(np.double)
+    # For the representative message, get weights from word distributions:
     for i_s in range(len(v_2)):
         if str(spacy_words[i_s]) in rel_freq_list[i_cat][:no_top]:
             v_2[i_s] = rel_freq_list[i_cat][str(spacy_words[i_s])]
@@ -166,11 +176,11 @@ def wmd_mod(s1, i_cat, no_top):
     dist_matrix = euclidean_distances(w2v_vectors).astype(np.double)
     return emd(v_1, v_2, dist_matrix)
 
-# Optimal number of top words
+# Optimal number of top words (from the main_analysis.ipynb)
 no_top_optimal = 180
 
 # Optimal threshold
-thresh_opt =0.010227
+thresh_opt = 0.0535
 
 
 
@@ -195,9 +205,10 @@ channel_list = slack_client.api_call("channels.list")['channels']
 all_channel_ids = [c['id'] for c in channel_list if 'ex' in c['name']]
 all_channel_names = [c['name'] for c in channel_list if 'ex' in c['name']]
 
-# This function will check if the output from Slack came 
-# from a user as a text message:
 def parse_slack_output(slack_rtm_output):
+    """
+    Check if the output from Slack came from a user as a text message
+    """
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
@@ -206,26 +217,35 @@ def parse_slack_output(slack_rtm_output):
                 		output['channel'], output['user'])
     return None, None, None
 
-# The main function that will handle the input and decide whether the bot 
-# reacts (and how) or not
 def handle_input(input_string, channel, user):
+    """
+    Handle the input and decide whether the bot reacts (and how) or not
+    """
+    # Clean the input string
     input_tokenized = clean_post(input_string)
     input_tokenized = [t for t in input_tokenized 
     				   if oov_checker_plus(t) == True]
     input_clean = " ".join(input_tokenized)
     generic = False
+    # If it's empty after cleaning, it's generic
     if len(input_clean) == 0: 
         generic = True
     else:
+        # Calculate WMD between the message and all the channels and find the
+        # shortest one:
         wmd_avgs = [wmd_mod(input_clean, i, no_top_optimal) 
         			for i in range(len(data_train))]
         index_min = wmd_avgs.index(min(wmd_avgs))
         predicted_channel = all_channel_ids[index_min]
         top_indices = np.argsort(wmd_avgs)
+        # If the relative difference between the top score and the next one is 
+        # less than the threshold, flag as generic:
         top_score = wmd_avgs[top_indices[0]]
         next_score = wmd_avgs[top_indices[1]]
         rel_diff = np.abs(top_score - next_score) / top_score
         if rel_diff < thresh_opt: generic = True
+        # React if the message is non-generic and the user is in the wrong
+        # channel:
         if predicted_channel != channel and user != bot_id and generic == False:
             response = ("Hey <@" + user + ">, consider posting this in the <#" + 
                         predicted_channel + "> channel.")

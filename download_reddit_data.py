@@ -18,7 +18,7 @@ chosen_subreddits = ['diving', 'Handball', 'corgi', 'datascience',
 					 'MachineLearning']
 comments_threshold = 5000
 
-#Connect to Reddit's API
+# Connect to Reddit's API
 reddit = praw.Reddit(client_id = os.environ["PRAW_CLIENT_ID"],
                      client_secret = os.environ["PRAW_CLIENT_SECRET"],
                      password = os.environ["PRAW_PASSWORD"],
@@ -36,7 +36,7 @@ for i in range(len(chosen_subreddits)):
     			"""
     cur.execute(sql_query, db_tuple)
 
-#Couple of functions that we'll use to display the remaining time
+# Couple of functions that we'll use to display the remaining time
 
 def stringify(num):
 	"""

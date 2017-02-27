@@ -1,7 +1,7 @@
 """
 This module uploads the previously downloaded Reddit data to Slack.
 There's a Slack team called `Slack Police`, with 5 bots there. 
-The idea is to pick one of the first four bots here randomly as we upload the 
+The idea is to pick one of the first four bots randomly as we upload the 
 messages to Slack, so it looks like a real conversation. 
 The last bot, officer_newman will be the one monitoring discussions and 
 warning about users going off-topic.
@@ -35,7 +35,7 @@ all_channel_upload_list = [channel_list[i]['id'] for i in
 subreddit_upload_names = all_subreddit_upload_names
 channel_upload_list = all_channel_upload_list
 
-# Loop over them and, for now, just upload the first 1000 comments, 
+# Loop over them and, for now, just upload the first 1000 comments.
 # Also also pause for 1s between each ping, due to Slack's API rate limit.
 comment_limit = 1000
 cnt = 0
