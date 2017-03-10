@@ -1,49 +1,48 @@
-<img align="right" width="200px" src="images/slack_police_logo.png">
-This is a project I did as a Data Science Fellow at [Insight Data Science](http://insightdatascience.com/) in the January 2017 session, in consultation with [Fast Forward Labs](http://www.fastforwardlabs.com/). 
 
-Fast Forward Labs is in business of building prototypes by taking cutting edge machine learning and AI research and evaluating its feasibility in the real world. They were interested in building a chat bot that incorporates some pretty cool recent methods for natural language processing.
+We love [Slack](https://slack.com/), a popular messaging app especially amongst developers. Slack brings communication together in one place. It's real-time messaging, archiving and search for teams. Conversations are organized in channels, often by topic. *Add examples* More often than not, channel names are insufficient to understand a given channel's topic. Veterans just *know* where to post content, new members of the team may struggle and post messages in the wrong channels. Nobody wants to be that nagging veteran team member trying to direct the rookie to a more appropriate place—let a bot do the work! I build a bot that learns the topics of different Slack channels, monitors conversations, and warns users when they go off topic. Give it a [try](https://slack-police.slack.com)!
 
-And so I built a user-friendly and reasonably **smart bot for Slack that helps users stay on topic**. 
+At its heart, the bot needs to be able to compare two messages or documents; the user's input and messages already present in a channel (concatenated into one long document). A standard way to compare two documents is to use [bag-of-words](https://en.wikipedia.org/wiki/Bag-of-words_model) (BoW), which includes approaches such as [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf), and cosine similarity. Alas, BoW does not capture semantic properties of words, problems arise when documents share related but not identical words (e.g., press and media).
 
-Below you can find the links to the demo Slack Team where you can play with the bot (see Section 3 for details), a presentation that closely follows this blog, and the bot code on Github.
+##Word Mover's Distance for Document Similarity
+I used the [Word Mover's Distance](http://jmlr.org/proceedings/papers/v37/kusnerb15.pdf), a novel similarity metric built on top of and leveraging [word embeddings](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf). Word embeddings are high dimensional representations of words. Words of similar meaning live close to one another in this higher dimensional space; word embeddings capture semantric properties of words (i.e., distributional semantics). I use pre-trained word embeddings from [Spacy](https://spacy.io/) trained on the Common Crawl corpus.
 
-<div align="right">
-<a href="https://slack-police.slack.com" class="btn2">Demo Slack Team</a>
-<a href="https://docs.google.com/presentation/d/1VLeTp8POxU1A3GbDOCrLtfiA20Cu3ofJFv76Ezbo4Vk/pub?start=false&loop=false&delayms=3000" class="btn2">Presentation</a>
-<a href="https://github.com/aficnar/slackpolice" class="btn2">Code on Github</a>
-</div>
+A natural way to estimate how dissimilar, or distant, two documents are is to look at the distance between the corresponding word vectors and, roughly speaking, add up those distances. That is the idea behind the Word Mover's Distance, and neatly, it is an instance of the well-known [Earth Mover's Distance](https://en.wikipedia.org/wiki/Earth_mover's_distance) (EMD) optimization problem, only formulated in the word embedding space. 
 
----
+###Earth Mover's Distance for Vector Similarity
+The EMD assumes that one has two collections of vectors, let's call them the <i>senders</i> and the <i>receivers</i>, and a matrix of their pair-wise distances. In addition to this, each of the vectors has a weight, which is a real number smaller than 1, indicating how much "goods" each of the sender vectors has to send and how much of the goods each of the receiver vectors needs to receive. The sum of all the weights for the receiver vectors is normalized to 1, as it is for the sender vectors. The problem now is, given the distances (costs) between the sender-receiver pairs, to determine the most efficient way to <i>move</i> the goods from the senders to the receivers, allowing for partial sending and receiving (i.e. so that a sender can send a portion of its goods to one receiver and another portion to another receiver). This is obviously a non-trivial constrained optimization problem, and it has a known solution, which can be easily implemented in Python with the <a href="https://pypi.python.org/pypi/pyemd"><code class="highlighter-rouge">pyemd</code></a> package. <br><br>
 
-# Contents
+WMD is the application of the EMD problem to the context of word embeddings, where the senders and receivers are word embeddings of words from the first and second document we're comparing, respectively. The weights of the vectors are chosen to be proportional to the number of times the corresponding word appears in the document. The distances between the vectors are then calculated using standard Euclidean distances in the word embedding space. In this way we can easily calculate the WMD distance between two documents using the <code class="highlighter-rouge">pyemd</code> package.
 
-[**1. Why a smart policing bot?**](#why_bot)
+###<i>O(p^3 log(p))</i>, Terrible Time Complexity
+A practical obstacle in applying this method to our case is the fact that the EMD algorithm has a horrible time complexity: <i>O(p^3 log(p))</i>, where <i>p</i> is the number of unique words in the two documents. We would need to compare the user's input to all of the previous messages in all the channels, calculate the average distance for each of the channels, and the one with the smallest average distance would be our prediction for the channel to which the user's message should go. If the user posted the message in the channel we predicted, the bot doesn't do anything, otherwise the bot will advise the user to consider posting it to the predicted channel. For Slack teams that contain a lot of messages spread out over a lot of channels, this will not be a feasible approach for a real time response of the bot. 
 
-[**2. Getting the data**](#get_data)
+So, let's modity the WMD. Comparing the input message to *all* the messages in a given channel seems excessive: surely there are messages that are more "representative" of the channel content than the others, and it's likely enough to compare the user input to those messages only. However, this would require expensive preprocessing, in which we essentially have to sort the channel messages using WMD as a key. But can we somehow *construct* a single message representative of an entire channel? 
 
-[**3. Demo: Officer Slackbot in action**](#demo)
+###Slack Channel "Fingerprints"
+Intuitively, this could be achieved by looking at word distributions in a given channel, as shown on the right. Obviously, to a person, looking at the first, say, 10 or so words that occur most often in a channel would give a pretty good idea of what that channel is about. A single message representative of that channel should therefore contain only those 10 words. To use this message in EMD / WMD, we need to choose the weights (see previous subsection) of the vectors representing the words in it. Since the weights in a standard WMD are directly proportional to how many times a given word appears in a message, we can make the weights in our representative message proportional to the number of times a given word appears in the entire channel (and then normalize it). 
 
-[**4. Bot brains**](#bot_brains)
+In this way we've constructed a single representative message for each channel, and we only need to calculate the WMD distances between the input message and each of the representative messages, find the shortest one, and predict the corresponding channel as the one the input message is supposed to go to. 
 
-[**5. How smart is the bot?**](#bot_smart)
+Is 10 words enough to form a representative message? How about 30? 100? We can find the optimal number of words,  <i>n_words</i>, by treating it as a hyperparameter and tuning it on a validation set? Yes. The answer is 180.
 
-[**6. Summary & what more can be done**](#summary)
+##Model Performance
+Finally, finally we need to compute the accuracy of our model. On the right we see the confusion matrix for the test set, showing the distributions of messages from their true categories over the predicted ones. The accuracy of this model is about 74%, which is pretty good, and a noticeable improvement from 68% that one gets from the tf-idf approach and using the cosine similarity as the metric. 
 
-[**7. About me**](#about_me)
+###Turns Out "Thank You's" Can Be Annoying 
+In the confusion matrix we see some expected confusion with the closely related topics: for example, 24% of messages from the machine learning channel got misclasified as data science. If we look under the hood, we can see that a lot of these messages are in fact pretty generic (e.g. "thank you") and could belong to any channel. In fact, our model picked up on that: the distances to all the channels for these messages are pretty similar, and it just happens that the distance to the data science channel was the shortest one. 
 
----
+Let's elimiate some of these "generic" messages, let's introduce a threshold: when the distance between the channel the message was posted in and the channel that the message was classified to belong to is smaller than some value epsilon, we'll ignore the prediction of the model and the bot won't advise the user. To keep things simple, we will use a fixed, relative threshold for the entire corpus. We'll treat the threshold as a hyperparameter, and tune it on the validation set. <a onclick="showhide('expl2')">Click here for more details.</a>
 
-# <a name="why_bot">1. Why a smart policing bot?</a>
+However, the messages are not labeled as generic or non-generic; we cannot code up some automatic verification process that can tell us how accurately the model is performing in flagging messages as generic (for a given value of the threshold). We would need an actual human being to look at the example the model flagged as generic and decide if it is indeed generic. That seems cumbersome! Let's take the following practical approach of maximizing the accuracy likelihood.
 
-[Slack](https://slack.com/) is a popular messaging app for teams that allows team members to discuss different topics, organized in channels. Now, when a new member joins a Slack team that's been around for some time, they sometimes tend to post messages in wrong channels. Nobody wants to be that nagging senior team member trying to direct this rookie to a more appropriate place. 
+In order not to decrease the accuracy of our model too much, we would like to minimize the number of correctly classified messages that are flagged as generic, as flagging a message as generic introduces a possibility that we mis-flagged it, which would decrease the accuracy of the model. On the other hand, in order to try to increase the accuracy of our model, we would like to maximize the number of incorrectly classified messages flagged as generic, as flagging a message as generic also introduces a possibility that we correctly flagged it, which would increase the accuracy of the model. As we increase the threshold, the amount of correctly classified messages predicted to be generic will increase, while the amount of the incorrectly classified messages predicted to be non-generic will decrease, as shown in the plot above. A natural choice for the optimal threshold is the place where the two curves intersect, which is about 0.05 in our case.
 
-Wouldn't it be nice to have a smart bot that can learn topics of different channels, monitor the discussions and then warn users if they go off topic? Building such a bot is the aim of this project.
+Now that we have chosen an optimal threshold, we can apply our model to the test set, and then manually check whether all the messages our model flagged as generic are indeed generic, and use that to update the effective accuracy of the model. <b>This results in the final accuracy of about 84% (which is better than the initial *insert*).
 
----
+@andrej add brief summary of project's technical solution
 
-# <a name="get_data">2. Getting the data</a>
-
-In order to build my bot and see how accurately it's performing, I needed some data. Slack data is hard to come by, since it's private. The next best thing is [Reddit](https://www.reddit.com/), since its data is easily available and has a similar structure to Slack, where instead of channels, different topics are grouped into subreddits. 
+###Data
+Slack data is hard to come by, since it's private. The next best thing is [Reddit](https://www.reddit.com/), since its data is easily available and has a similar structure to Slack, where instead of channels, different topics are grouped into subreddits. 
 
 For the purposes of demonstrating the model, I chose the following five topics (subreddits): *Diving*, *Handball*, *Corgi*, *Data Science*, and *Machine Learning*. These have been chosen intentionally so that some of them are more similar to each other and others are less (plus, they also tell you something about the things I like!). 
 
@@ -64,73 +63,6 @@ Below is a little illustration of bot's basic functionality, showing me entering
 
 ---
 
-# <a name="bot_brains">4. Bot brains</a>
-
-Now that we've seen the bot in action, let's see how does it do all this. 
-
-The bot obviously needs to be able to compare two messages (more generally, documents): the user's input and one of the messages already present in a channel. A standard way to compare two documents is to use the [bag-of-words](https://en.wikipedia.org/wiki/Bag-of-words_model) (BoW) approach, which assigns a sparse vector to each document, with elements related to the number of times a given word appears in the document (this includes approaches such as [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) as well). Once such document vectors are generated, the similarity of the two documents is measured by calculating the cosine between the corresponding vectors: higher cosine similarity indicates more similar documents. 
-
-<img align="right" width="200px" src="images/two_documents.png" hspace="20" vspace="20">
-However, problems arise when two documents share no common words, but convey similar meaning, such as in the example on the right. The BoW / tf-idf vectors of these two documents are perpendicular, yielding zero cosine similarity. 
-
-
-
-## 4.1 Word Mover's Distance
-
-A way to fix this was proposed recently at the *International Conference on Machine Learning* in 2015 in the form of [Word Mover's Distance](http://jmlr.org/proceedings/papers/v37/kusnerb15.pdf) (WMD) model. This model starts by representing each of the words in a document with vectors in a high dimensional (word embedding) vector space by using [word2vec](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf) (w2v), a popular neural network model trained to reconstruct the semantic context of words. What that essentially means is that the words that have similar meaning will have their w2v vectors close to each other, as illustrated below. I will use a pre-trained word2vec model from the [Spacy](https://spacy.io/) package, which has been trained on the Common Crawl corpus.
-
-<img align="right" width="300px" src="images/w2v_space.png" hspace="20" vspace="20">
-Then, a natural way to estimate how dissimilar, or distant, the two documents are is to look at the distance between the corresponding word vectors and, roughly speaking, add those distances up. This metric is called the Word Mover's Distance, because it is an instance of the well-known [Earth Mover's Distance](https://en.wikipedia.org/wiki/Earth_mover's_distance) (EMD) optimization problem, only formulated in the word embedding space. 
-
-What follows is an intuitive, but somewhat technical explanation of the EMD problem, important for understanding the modification of the WMD that I'll have to implement. <a onclick="showhide('expl1')">Click here for more details.</a>
-<div style="display:none" id="expl1">
-The EMD assumes that one has two collections of vectors, let's call them the <i>senders</i> and the <i>receivers</i>, and a matrix of their pair-wise distances. In addition to this, each of the vectors has a weight, which is a real number smaller than 1, indicating how much "goods" each of the sender vectors has to send and how much of the goods each of the receiver vectors needs to receive. The sum of all the weights for the receiver vectors is normalized to 1, as it is for the sender vectors. The problem now is, given the distances (costs) between the sender-receiver pairs, to determine the most efficient way to <i>move</i> the goods from the senders to the receivers, allowing for partial sending and receiving (i.e. so that a sender can send a portion of its goods to one receiver and another portion to another receiver). This is obviously a non-trivial constrained optimization problem, and it has a known solution, which can be easily implemented in Python with the <a href="https://pypi.python.org/pypi/pyemd"><code class="highlighter-rouge">pyemd</code></a> package. <br><br>
-
-WMD is the application of the EMD problem to the context of word embeddings, where the senders and receivers are w2v vectors of words from the first and second document we're comparing, respectively. The weights of the vectors are chosen to be proportional to the number of times the corresponding word appears in the document. The distances between the vectors are then calculated using standard Euclidean distances in the word embedding space. In this way we can easily calculate the WMD distance between two documents using the <code class="highlighter-rouge">pyemd</code> package.
-</div>
-
-
-## 4.2 Modifying WMD
-
-A practical obstacle in applying this method to our case is the fact that the EMD algorithm has a horrible time complexity: <i>O(p^3 log(p))</i>, where <i>p</i> is the number of unique words in the two documents. We would need to compare the user's input to all of the previous messages in all the channels, calculate the average distance for each of the channels, and the one with the smallest average distance would be our prediction for the channel to which the user's message should go. If the user posted the message in the channel we predicted, the bot doesn't do anything, otherwise the bot will advise the user to consider posting it to the predicted channel. For Slack teams that contain a lot of messages spread out over a lot of channels, this will not be a feasible approach for a real time response of the bot. 
-
-<img align="right" width="300px" src="images/frequencies.png" hspace="20" vspace="20">
-So I needed to modify the WMD method somewhat. Comparing the input message to *all* the messages in a given channel seems excessive: surely there are messages that are more "representative" of the channel content than the others, and it's likely enough to compare the user input to those messages only. However, this would require expensive preprocessing, in which we essentially have to sort the channel messages using WMD as a key. But can we somehow *construct* a single message representative of an entire channel? 
-
-Intuitively, this could be achieved by looking at word distributions in a given channel, as shown on the right. Obviously, to a person, looking at the first, say, 10 or so words that occur most often in a channel would give a pretty good idea of what that channel is about. A single message representative of that channel should therefore contain only those 10 words. To use this message in EMD / WMD, we need to choose the weights (see previous subsection) of the vectors representing the words in it. Since the weights in a standard WMD are directly proportional to how many times a given word appears in a message, we can make the weights in our representative message proportional to the number of times a given word appears in the entire channel (and then normalize it). 
-
-In this way we've constructed a single representative message for each channel, and we only need to calculate the WMD distances between the input message and each of the representative messages, find the shortest one, and predict the corresponding channel as the one the input message is supposed to go to.
-
----
-
-# <a name="bot_smart">5. How smart is the bot?</a>
-
-But is 10 words enough to form a representative message? Is it 30? A 100? We can find the optimal number of words,  <i>n_words</i>, by treating it as a hyperparameter and tuning it on a validation set. Our entire corpus will consist of about 5000 comments of varying length from each of the 5 channels, which will be split into a training (70%), validation (20%) and test (10%) set. 
-
-The training set will be used to infer the word distributions for each of the channels. The text will be pre-processed in a standard way (by removing punctuation, stop words, etc.), and in addition to that we'll also use `Spacy`'s parts-of-sentence tagging to only leave the nouns, verbs and adjectives, as they are the ones carrying most of the meaning. We will also remove all the words that are not in `Spacy`'s pre-trained vocabulary, since we won't have a vector representation for those (luckily, only about 2.5% of the words are not in the vocabulary).
-
-The validation set will be used to determine the best value for <i>n_words</i>, which turned out to be 180.
-
-<img align="right" width="300px" src="images/confusion_matrix.png" hspace="20" vspace="20">
-Finally, the test set will be used to compute the final accuracy of our model. On the right we see the confusion matrix for the test set, showing the distributions of messages from their true categories over the predicted ones. The accuracy of this model is about 74%, which is pretty good, and a noticeable improvement from 68% that one gets from the tf-idf approach and using the cosine similarity as the metric. 
-
-
-
-## 5.1 Introducing the threshold
-
-In the confusion matrix we see some expected confusion with the closely related topics: for example, 24% of messages from the machine learning channel got misclasified as data science. But, if we look under the hood, we can see that a lot of these messages are in fact pretty generic (e.g. "thank you") and could belong to any channel. In fact, our model picked up on that: the distances to all the channels for these messages are pretty similar, and it just happens that the distance to the data science channel was the shortest one. 
-
-We can therefore eliminate some of these messages by introducing a threshold: when the distance between the channel the message was posted in and the channel that the message was classified to belong to is smaller than some value epsilon, we'll ignore the prediction of the model and the bot won't advise the user. To keep things simple, we will use a fixed, relative threshold for the entire corpus, although this could be certainly improved by, for example, considering different thresholds for different channels. 
-
-As is usually done, we'll treat the threshold as a hyperparameter, and tune it on the validation set. <a onclick="showhide('expl2')">Click here for more details.</a>
-<div style="display:none" id="expl2">
-However, this is slightly tricky in our case, as the messages are not labeled as generic or non-generic, and it is therefore impossible to code up some automatic verification process that can tell us how accurately the model is performing in flagging messages as generic (for a given value of the threshold): an actual human being needs to look at each example the model flagged as generic and decide if it is indeed generic. Because of this, and because of the fact that optimizing for a high precision or high recall is a matter of user preference, we opt for the following practical approach of maximizing the accuracy likelihood. <br><br>
-
-<img align="right" width="300px" src="images/threshold.png" hspace="20" vspace="20"> In order not to decrease the accuracy of our model too much, we would like to minimize the number of correctly classified messages that are flagged as generic, as flagging a message as generic introduces a possibility that we mis-flagged it, which would decrease the accuracy of the model. On the other hand, in order to try to increase the accuracy of our model, we would like to maximize the number of incorrectly classified messages flagged as generic, as flagging a message as generic also introduces a possibility that we correctly flagged it, which would increase the accuracy of the model. As we increase the threshold, the amount of correctly classified messages predicted to be generic will increase, while the amount of the incorrectly classified messages predicted to be non-generic will decrease, as shown in the plot above. A natural choice for the optimal threshold is the place where the two curves intersect, which is about 0.05 in our case.
-</div>
-Now that we have chosen an optimal threshold, we can apply our model to the test set, and then manually check whether all the messages our model flagged as generic are indeed generic, and use that to update the effective accuracy of the model. <b>This results in the final accuracy of about 84%.</b>
-
----
 
 
 # <a name="summary">6. Summary & what more can be done</a>
